@@ -766,29 +766,28 @@ int nxsig_tcbdispatch(FAR struct tcb_s *stcb, siginfo_t *info,
 
 int nxsig_dispatch(pid_t pid, FAR siginfo_t *info, bool thread)
 {
+  FAR struct tcb_s *stcb = nxsched_get_tcb(pid);
+
+  if (stcb != NULL)
+    {
 #ifdef HAVE_GROUP_MEMBERS
-  if (!thread)
-    {
-      /* Find the group by process PID and call group signal() to send the
-       * signal to the correct group member.
-       */
-
-      FAR struct task_group_s *group = task_getgroup(pid);
-      if (group != NULL)
+      if (!thread)
         {
-          return group_signal(group, info);
+          /* Find the group by process PID and call group signal() to send the
+           * signal to the correct group member.
+           */
+
+          FAR struct task_group_s *group = stcb->group;
+          if (group != NULL)
+            {
+              return group_signal(group, info);
+            }
         }
-    }
-  else
+      else
 #endif
-    {
-      /* Get the TCB associated with the thread TID */
-
-      FAR struct tcb_s *stcb = nxsched_get_tcb(pid);
-      if (stcb != NULL)
-        {
-          return nxsig_tcbdispatch(stcb, info, false);
-        }
+          {
+            return nxsig_tcbdispatch(stcb, info, false);
+          }
     }
 
   return -ESRCH;
