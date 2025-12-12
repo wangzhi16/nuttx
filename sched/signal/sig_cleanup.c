@@ -61,6 +61,10 @@ void nxsig_cleanup(FAR struct tcb_s *stcb)
       nxsig_release_pendingsigaction(sigq);
     }
 
+    /* Using sleep to simulate the blocking that free might encounter. */
+
+  usleep(1);
+
   /* Misc. signal-related clean-up */
 
   sigfillset(&stcb->sigprocmask);
